@@ -12,9 +12,9 @@ class UserController extends Controller {
 
     // Obtener todos los usuarios (solo accesible para admin)
     public function index() {
-        $user = auth()->user();
+        $user = Auth::user();
 
-        if ($user->hasRole('admin')) { 
+        if ($user->role === 'admin') { 
             return response()->json(User::all(), 200);
         } else {
             return response()->json(['message' => 'Unauthorized'], 403);
@@ -22,10 +22,10 @@ class UserController extends Controller {
     }
 
     public function show($id) {
-        $user = auth()->user();
+        $user = Auth::user();
         $requestedUser = User::findOrFail($id);
 
-        if ($user->hasRole('admin') || ($user->hasRole('soporte') && $user->id == $requestedUser->id)) {
+        if (($user->role === 'admin') || ($user->role === 'soporte') && $user->id == $requestedUser->id) {
             
             return response()->json($requestedUser, 200);
         }
@@ -51,9 +51,9 @@ class UserController extends Controller {
 
     // Crear un nuevo usuario (solo accesible para admin)
     public function store(Request $request) {
-        $user = auth()->user();
+        $user = Auth::user();
 
-        if (!$user->hasRole('admin')) {
+        if (!$user->role === 'admin') {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -73,10 +73,10 @@ class UserController extends Controller {
     }
 
     public function update(Request $request, $id) {
-        $user = auth()->user();
+        $user = Auth::user();
         $requestedUser = User::findOrFail($id);
 
-        if (!$user->hasRole('admin') && $user->id !== $requestedUser->id) {
+        if (!$user->role === 'admin' && $user->id !== $requestedUser->id) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -93,7 +93,7 @@ class UserController extends Controller {
 
         $requestedUser->update($data);
 
-        if ($user->hasRole('admin') && isset($data['role'])) {
+        if ($user->role === 'admin' && isset($data['role'])) {
             $requestedUser->syncRoles([$data['role']]);
         }
 
@@ -102,9 +102,9 @@ class UserController extends Controller {
 
     // Eliminar un usuario (solo accesible para admin)
     public function destroy($id) {
-        $user = auth()->user();
+        $user = Auth::user();
 
-        if (!$user->hasRole('admin')) { 
+        if (!$user->role === 'admin') { 
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
@@ -116,16 +116,28 @@ class UserController extends Controller {
 
     public function showUserIncidencias($id)
     {
-        $authenticatedUser = auth()->user();
+        $user = Auth::user(); 
         
-        if ($authenticatedUser->id != $id) {
+        $userToShow = User::findOrFail($id);
+
+        if ($user->role === 'admin') {
+            $incidencias = Incidencia::where('assigned_to', $id)->get();
+        } 
+       
+        elseif ($user->role === 'soporte') {
+            if ($user->id != $id) {
+                abort(403, 'No tienes permiso para ver estas incidencias');
+            }
+            
+            $incidencias = Incidencia::where('assigned_to', $id)->get();
+        }
+        else {
             abort(403, 'No tienes permiso para ver estas incidencias');
         }
 
-        $incidencias = Incidencia::where('assigned_to', $authenticatedUser->id)->get();
-
         return view('admin.detalle-usuarios', [
-            'user' => $authenticatedUser,
+            'user' => $user,         
+            'userToShow' => $userToShow, 
             'incidencias' => $incidencias,
         ]);
     }
@@ -133,16 +145,16 @@ class UserController extends Controller {
 
     public function createUser()
     {
-        $user = auth()->user();
-        if (!$user->hasRole('admin')) {
+        $user = Auth::user();
+        if (!$user->role === 'admin') {
             abort(403, 'No tienes permiso para crear usuarios');
         }
         return view('admin.crear-usuario');
     }
 
     public function storeUser(Request $request) {
-        $user = auth()->user();
-        if (!$user->hasRole('admin')) {
+        $user = Auth::user();
+        if (!$user->role === 'admin') {
             abort(403, 'No tienes permiso para guardar usuarios');
         }
         $data = $request->validate([
@@ -161,9 +173,9 @@ class UserController extends Controller {
     }
 
     public function destroyUser($id) {
-        $user = auth()->user();
+        $user = Auth::user();
 
-        if (!$user->hasRole('admin')) {
+        if (!$user->role === 'admin') {
             return redirect()->route('usuarios.soporte')->with('error', 'No tienes permisos para realizar esta acción.');
         }
   

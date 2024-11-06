@@ -20,7 +20,8 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
 Route::view('/profile', 'profile')
     ->middleware(['auth']) 
     ->name('profile');
-// Rutas para la gestión de incidencias
+
+    // Rutas para la gestión de incidencias
 Route::middleware(['auth'])->group(function () {
     Route::get('/incidencias', [IncidenciaController::class, 'index'])->name('incidencias.index');
     Route::get('/incidencias/create', [IncidenciaController::class, 'create'])->name('incidencias.create');
@@ -45,6 +46,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/usuarios', [UserController::class, 'storeUser'])->name('usuarios.store');
     Route::delete('/usuarios/{id}', [UserController::class, 'destroyUser'])->name('usuarios.destroy');
 });
+
+
 
 
 require __DIR__.'/auth.php';

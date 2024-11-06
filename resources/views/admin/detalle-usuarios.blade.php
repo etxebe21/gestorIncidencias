@@ -8,14 +8,14 @@
         </div>
         <x-slot name="header">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Incidencias de: ' . $user->name) }}
+                {{ __('Incidencias de: ' . $userToShow->name) }}
             </h2>
         </x-slot>
 
         <div class="container mx-auto px-4 mt-10">
             <h3 class="text-xl font-semibold mb-4 flex justify-between items-center">
-                Incidencias asignadas a {{ $user->name }}
-                <a href="{{ route('usuarios.incidencias.create', $user) }}" class="flex items-center bg-green-500 text-white font-bold py-2 px-4 rounded hover:bg-green-600 transition duration-300">
+                Incidencias asignadas a {{ $userToShow->name }}
+                <a href="{{ route('usuarios.incidencias.create', $userToShow) }}" class="flex items-center bg-green-500 text-white font-bold py-2 px-4 rounded hover:bg-green-600 transition duration-300">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                     </svg>
@@ -29,11 +29,11 @@
             @else
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                     @foreach ($incidencias as $incidencia)
-                        <div class="w-full max-w-lg bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700 p-4">
+                        <div class="w-full max-w-lg bg-white border border-gray-200 rounded-lg shadow p-4">
                             <div class="flex flex-col items-center pb-4">
-                                <h5 class="mb-2 text-xl font-medium text-gray-900 dark:text-white">{{ $incidencia->titulo }}</h5>
-                                <span class="text-sm text-gray-500 dark:text-gray-400 mt-2">{{ $incidencia->descripcion }}</span>
-                                <span class="text-sm text-gray-500 dark:text-gray-400 mt-4">Estado: {{ $incidencia->estado }}</span>
+                                <h5 class="mb-2 text-xl font-medium text-gray-900">{{ $incidencia->titulo }}</h5>
+                                <span class="text-sm text-gray-500 mt-2">{{ $incidencia->descripcion }}</span>
+                                <span class="text-sm text-gray-500 mt-4">Estado: {{ $incidencia->estado }}</span>
                             </div>
                             <div class="flex justify-center mt-4 space-x-4">
                                 <button onclick="window.location='{{ route('usuarios.incidencias.edit', $incidencia->id) }}'"class="inline-flex items-center px-4 py-2 text-sm font-medium text-center text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition duration-300">

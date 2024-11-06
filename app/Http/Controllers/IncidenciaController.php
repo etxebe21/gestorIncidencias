@@ -5,50 +5,63 @@ namespace App\Http\Controllers;
 use App\Models\Incidencia; 
 use Illuminate\Http\Request;
 use App\Models\User; 
-
+use Illuminate\Support\Facades\Auth;  // Asegúrate de importar Auth
 
 class IncidenciaController extends Controller
 {
     
+    
+
     public function index()
     {
-        $user = auth()->user(); 
-
-        if ($user->hasRole('admin')) {
-            $incidencias = Incidencia::with('asignadoA')->get();
+        $user = Auth::user();  
+    
+        if ($user) {
+            if ($user->role= 'admin') {
+                $incidencias = Incidencia::with('asignadoA')->get();
+            } else {
+                $incidencias = Incidencia::with('asignadoA')->where('assigned_to', $user->id)->get();
+            }
         } else {
-            
-            $incidencias = Incidencia::with('asignadoA')->where('assigned_to', $user->id)->get();
+            return redirect()->route('login');
         }
-
+    
         return view('incidencias.index', compact('incidencias'));
     }
-
+    
     public function create()
     {
         $users = User::all(); 
-        $user = auth()->user();
+        $user = Auth::user();
 
-        if (!$user->hasRole('admin')) { 
+        if (!$user->role= 'admin') { 
             return response()->json(['message' => 'Unauthorized'], 403);
         }
-        if (!$user->hasRole('admin')) {
+        if (!$user->role= 'admin') {
             $users = $users->where('id', $user->id); 
         }
 
         return view('incidencias.create', compact('users'));
     }
 
-    public function createUserInc( $user)
+    public function createUserInc( $id)
     {
-        return view('incidencias.usuarios-create', compact('user'));
+        $user = Auth::user();
+        $userToShow = User::findOrFail($id);
+
+        // if ($user->role != 'admin') {
+        //     return response()->json(['message' => 'Unauthorized'], 403);
+        // }
+        
+        return view('incidencias.usuarios-create', compact('userToShow'));
+
     }
 
     public function store(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
-        if (!$user->hasRole('admin')) { 
+        if (!$user->role='admin') { 
             return response()->json(['message' => 'Unauthorized'], 403);
         }
         $request->validate([
@@ -63,7 +76,7 @@ class IncidenciaController extends Controller
         $incidencia->descripcion = $request->input('descripcion');
         $incidencia->estado = $request->input('estado');
         $incidencia->assigned_to = $request->input('assigned_to'); 
-        $incidencia->created_by = auth()->user()->id; 
+        $incidencia->created_by = $user->id; 
 
         $incidencia->save();
 
@@ -72,6 +85,8 @@ class IncidenciaController extends Controller
 
     public function storeUserInc(Request $request)
     {
+        $user = Auth::user();
+        
         $request->validate([
             'titulo' => 'required|string|max:255',
             'descripcion' => 'required|string',
@@ -84,23 +99,24 @@ class IncidenciaController extends Controller
         $incidencia->descripcion = $request->input('descripcion');
         $incidencia->estado = $request->input('estado');
         $incidencia->assigned_to = $request->input('assigned_to'); 
-        $incidencia->created_by = auth()->user()->id; 
+        $incidencia->created_by = $user->id; 
 
         $incidencia->save();
 
-        return redirect()->route('usuarios.incidencias' , ['id' => $incidencia->assigned_to])->with('success', 'Incidencia creada correctamente.');
+        return redirect()->route('usuarios.incidencias', ['id' => $incidencia->assigned_to])
+            ->with('success', 'Incidencia creada correctamente.');
     }
 
     public function edit($id)
     {
-        $user = auth()->user(); 
+        $user = Auth::user(); 
         $incidencia = Incidencia::findOrFail($id); 
 
-        if (!$user->hasRole('admin') && $incidencia->assigned_to !== $user->id) {
+        if (!$user->role='admin' && $incidencia->assigned_to !== $user->id) {
             abort(403, 'Acceso denegado'); 
         }
  
-        $users = $user->hasRole('admin') ? User::all() : [$user];
+        $users = $user->role='admin' ? User::all() : [$user];
 
         return view('incidencias.edit', compact('incidencia', 'users'));
     }
@@ -114,9 +130,9 @@ class IncidenciaController extends Controller
 
     public function update(Request $request, $id)
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
-        if (!$user->hasRole('admin')) { 
+        if (!$user->role='admin') { 
             return response()->json(['message' => 'Unauthorized'], 403);
         }
         $request->validate([
@@ -161,9 +177,8 @@ class IncidenciaController extends Controller
 
     public function destroy(Incidencia $incidencia)
     {
-        $user = auth()->user();
-
-        if (!$user->hasRole('admin')) { 
+        $user = Auth::user();
+        if (!$user->role='admin') { 
             return response()->json(['message' => 'Unauthorized'], 403);
         }
         
